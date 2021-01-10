@@ -116,7 +116,7 @@ class HirshfeldWeights:
         return out
 
     @staticmethod
-    def generate_proatom(points, coord, num):
+    def generate_proatom(points, coord, num, expansion=None):
         """Evaluate pro-atom densities on the given grid points.
 
         Parameters
@@ -127,6 +127,9 @@ class HirshfeldWeights:
             Cartesian coordinates of the atom.
         num: int
             Atomic number of the atom.
+        expansion : dict, optional
+            Dictionary specifying the linear expansion of proatomic densities for
+            each atom in the molecule.
 
         Returns
         -------
@@ -136,7 +139,7 @@ class HirshfeldWeights:
         # compute distance of grid points from atom
         dist = np.linalg.norm(points[:, None] - coord, axis=-1)
         # compute pro-atom density
-        return HirshfeldWeights._get_proatom_density(num, dist)
+        return HirshfeldWeights._get_proatom_density(num, dist, expansion)
 
     def __call__(self, points, atom_coords, atom_nums, indices):
         """Evaluate integration weights on the given grid points.
