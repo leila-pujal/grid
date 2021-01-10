@@ -127,13 +127,19 @@ class HirshfeldWeights:
         np.ndarray(N,)
             Hirshfeld integration weights evaluated on :math:`N` grid points.
         """
+        expansion = self._expansion
         aim_weights = np.zeros(len(points))
         promolecule = np.zeros(len(points))
-        # evaluate (neutral) pro-atom densities & pro-molecule density
+        # evaluate pro-atom densities & pro-molecule density
         for index, atom_num in enumerate(atom_nums):
-            proatom = HirshfeldWeights.generate_proatom(
-                points, atom_coords[index], atom_num
-            )
+            if expansion is None:
+                proatom = self.generate_proatom(
+                    points, atom_coords[index], atom_num
+                )
+            else:
+                proatom = self.generate_proatom(
+                    points, atom_coords[index], atom_num, expansion[str(index)]
+                )
             promolecule += proatom
             start, end = indices[index], indices[index + 1]
             aim_weights[start:end] = proatom[start:end]
