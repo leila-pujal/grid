@@ -59,10 +59,17 @@ class HirshfeldWeights:
         """Return radial grid points and neutral density for a given atomic number."""
         with path("grid.data.proatoms", f"a{num:03d}.npz") as fname:
             data = np.load(fname)
-        return data["r"], data["dn"]
+            if num in [30, 10, 12, 36, 20, 4, 18]:
+                return data["r"], data["dn"], data["dc"]
+            elif num == [1]:
+                return data["r"], data["dn"], data["da"]
+            elif num == [2]:
+                return data["r"], data["dn"]
+            else:
+                return data["r"], data["dn"], data["da"], data["dc"]
 
     @staticmethod
-    def _get_proatom_density(num, coords_radial):
+    def _get_proatom_density(num, coords_radial, expansion):
         """Evaluate density of pro-atom on the given points.
 
         Parameters
@@ -77,12 +84,35 @@ class HirshfeldWeights:
         np.ndarray(K,)
             Pro-atom densities evaluated on :math:`K` radial grid points.
         """
+        # expansion = self._expansion
         # get pre-computed radial grid points & density of pro-atom
-        rad, rho = HirshfeldWeights._load_npz_proatom(num)
-        # interpolate pro-atom density
-        cspline = CubicSpline(rad, rho, bc_type="natural", extrapolate=True)
-        # evaluate pro-atom density on the given points
-        out = cspline(coords_radial).flatten()
+        if num in [30, 10, 12, 36, 20, 4, 18]:
+            rad, rho_n, rho_c = HirshfeldWeights._load_npz_proatom(num)
+        elif num == [1]:
+            rad, rho_n, rho_a = HirshfeldWeights._load_npz_proatom(num)
+        elif num == [2]:
+            rad, rho_n = HirshfeldWeights._load_npz_proatom(num)
+        else:
+            rad, rho_n, rho_a, rho_c = HirshfeldWeights._load_npz_proatom(num)
+        # interpolate pro-atom (neutral) density
+        if expansion is None:
+            cspline = CubicSpline(rad, rho_n, bc_type="natural", extrapolate=True)
+            # evaluate pro-atom density on the given points
+            out = cspline(coords_radial).flatten()
+        # interpolate pro-atom (linear combination) density
+        # Adapted from denspart.proatomdb.get_rho()
+        else:
+            rho = np.zeros(rho_n.size)
+            for charge, coeff in expansion.items():
+                if charge == 0.0 or charge == -0.0:
+                    rho += coeff * rho_n
+                elif charge < 0.0:
+                    rho += coeff * rho_a
+                elif charge > 0.0:
+                    rho += coeff * rho_c
+            cspline = CubicSpline(rad, rho, bc_type="natural", extrapolate=True)
+            out = cspline(coords_radial).flatten()
+
         return out
 
     @staticmethod
