@@ -30,8 +30,29 @@ from scipy.interpolate import CubicSpline
 class HirshfeldWeights:
     """Hirshfeld weights functions holder class."""
 
-    def __init__(self):
-        """Initialize class."""
+    def __init__(self, expansion=None):
+        """Initialize class.
+
+        Parameters
+        ----------
+        expansion : dict, optional
+            Dictionary specifying the linear expansion of proatomic densities for
+            each atom in the molecule.The organization should be as it follows:
+
+            {atomic position_1 : {charge_proatom_1 : contribution, charge_proatom_2 : contribution,
+            …}, atomic position_2 : {charge_proatom_1 : contribution,
+            charge_proatom_2 : contribution, …}, …}
+
+            Example for methane:
+            atom nums variable is [6 1 1 1 1]
+
+            {'1' : {0.0: 0.8634485108888619}, '0': {-0.0: 0.45386513052363586, -1.0: 0.5461348694763641},
+            '3': {0.0: 0.8634648321179402}, '2': {0.0: 0.8634611330830618}, '4': {0.0: 0.8634979080458045}}
+
+            If none standard Hirshfeld weights will be generated
+        """
+
+        self._expansion = expansion
 
     @staticmethod
     def _load_npz_proatom(num):
